@@ -136,9 +136,6 @@ data/
 *.pickle
 
 # Models
-models/*.pt
-models/*.pth
-models/*.onnx
 
 # Logs
 logs/

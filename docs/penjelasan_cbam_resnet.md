@@ -213,38 +213,216 @@ Output: Class logits
 - **Activation**: Softmax untuk klasifikasi multi-kelas
 - **Loss Function**: Cross-Entropy Loss
 
+## Preprocessing Data
+
+Preprocessing data merupakan langkah krusial sebelum data masuk ke dalam model. Berikut adalah langkah-langkah preprocessing yang dilakukan:
+
+### 1. Data Acquisition
+
+- **Dataset**: Mendeley Waste Classification Dataset atau TrashNet
+- **Format**: Gambar RGB dengan resolusi bervariasi
+- **Kelas**: Binary classification (Organic vs Recyclable) atau multi-class
+
+### 2. Data Cleaning
+
+- **Filtering**: Menghapus gambar yang korup atau tidak valid
+- **Quality Check**: Memastikan gambar memiliki resolusi minimum
+- **Class Balance**: Mengecek distribusi kelas untuk menghindari imbalance
+
+### 3. Data Splitting Strategy
+
+- **Train Set**: 70-80% dari total data
+- **Validation Set**: 10-15% dari total data
+- **Test Set**: 10-15% dari total data
+- **Stratified Split**: Memastikan proporsi kelas sama di setiap split
+- **Random State**: Menggunakan seed (42) untuk reproducibility
+
+```python
+# Contoh implementasi splitting
+from sklearn.model_selection import train_test_split
+
+# Split data menjadi train dan temp (val+test)
+train_files, temp_files = train_test_split(
+    all_files,
+    test_size=0.3,
+    stratify=labels,
+    random_state=42
+)
+
+# Split temp menjadi val dan test
+val_files, test_files = train_test_split(
+    temp_files,
+    test_size=0.5,
+    stratify=temp_labels,
+    random_state=42
+)
+```
+
+### 4. Image Preprocessing Pipeline
+
+#### Training Transforms
+
+```python
+train_transform = transforms.Compose([
+    transforms.Resize(256),                    # Resize ke 256x256
+    transforms.RandomCrop(224),                # Random crop 224x224
+    transforms.RandomHorizontalFlip(p=0.5),    # Flip horizontal 50%
+    transforms.RandomRotation(15),             # Rotasi ±15 derajat
+    transforms.ColorJitter(
+        brightness=0.2, contrast=0.2,
+        saturation=0.2, hue=0.1
+    ),  # Variasi warna
+    transforms.ToTensor(),                     # Convert ke tensor
+    transforms.Normalize(                       # Normalization
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+```
+
+#### Validation/Test Transforms
+
+```python
+val_transform = transforms.Compose([
+    transforms.Resize(256),                    # Resize ke 256x256
+    transforms.CenterCrop(224),                # Center crop 224x224
+    transforms.ToTensor(),                     # Convert ke tensor
+    transforms.Normalize(                       # Normalization
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+```
+
+### 5. Data Loading
+
+- **Batch Size**: 32 (dapat disesuaikan berdasarkan GPU memory)
+- **Shuffle**: True untuk training, False untuk validation/test
+- **Num Workers**: 4 (untuk parallel loading)
+- **Pin Memory**: True (untuk GPU acceleration)
+
+### 6. Data Augmentation Strategy
+
+- **Geometric Transformations**: Random crop, flip, rotation
+- **Color Transformations**: Brightness, contrast, saturation, hue jittering
+- **Purpose**: Meningkatkan robustness model terhadap variasi dunia nyata
+- **Validation**: Tidak menggunakan augmentation untuk konsistensi evaluasi
+
+## Hyperparameter Configuration
+
+Berdasarkan implementasi di notebook `cbam_resnet_research.ipynb`, berikut adalah konfigurasi hyperparameter yang digunakan:
+
+### 1. Model Hyperparameters
+
+- **Architecture**: CBAM-ResNet34
+- **Input Size**: 224 × 224 × 3
+- **Number of Classes**: 2 (Binary Classification)
+- **CBAM Enabled**: True
+- **Dropout Rate**: 0.3 (pada fully connected layer)
+
+### 2. Training Hyperparameters
+
+- **Batch Size**: 32
+- **Epochs**: 50
+- **Learning Rate**: 1e-3 (0.001)
+- **Weight Decay**: 1e-4 (L2 regularization)
+- **Optimizer**: AdamW
+- **Scheduler**: CosineAnnealingLR dengan T_max=50, eta_min=1e-6
+
+### 3. Data Configuration
+
+- **Image Size**: 224
+- **Batch Size**: 32
+- **Number of Workers**: 4
+- **Pin Memory**: True
+
+### 4. Loss Function
+
+- **Type**: CrossEntropyLoss
+- **Reduction**: Mean
+- **Label Smoothing**: None (default)
+
+### 5. Learning Rate Schedule
+
+```python
+scheduler = CosineAnnealingLR(
+    optimizer,
+    T_max=config.training.epochs,  # 50 epochs
+    eta_min=1e-6
+)
+```
+
+### 6. Regularization Techniques
+
+- **Weight Decay**: 1e-4 (L2 regularization)
+- **Batch Normalization**: Enabled di semua Conv layers
+- **Dropout**: 0.3 di fully connected layer
+- **Data Augmentation**: Comprehensive augmentation pipeline
+
+### 7. Mixed Precision Training
+
+- **Enabled**: True (torch.cuda.amp)
+- **Gradient Scaling**: Enabled untuk stability
+- **Memory Optimization**: Mengurangi memory usage ~50%
+
+### 8. Early Stopping (Optional)
+
+- **Monitor**: Validation F1-Score
+- **Patience**: 10 epochs
+- **Mode**: Maximize
+- **Min Delta**: 0.001
+
+### 9. Gradient Clipping
+
+- **Max Norm**: 1.0
+- **Norm Type**: 2
+
+### 10. Random Seeds
+
+- **PyTorch**: 42
+- **NumPy**: 42
+- **CUDA**: 42 (jika menggunakan GPU)
+
 ## Fungsi Aktivasi
 
 ### ReLU (Rectified Linear Unit)
-```
+
+```math
 f(x) = max(0, x)
 ```
+
 Digunakan pada semua layer konvolusi untuk:
+
 - Mengatasi vanishing gradient
 - Mempercepat konvergensi
 - Memberikan sparsity pada aktivasi
 
 ### Sigmoid
-```
+
+```math
 f(x) = 1 / (1 + e^(-x))
 ```
+
 Digunakan pada attention modules untuk menghasilkan bobot antara 0-1.
 
 ## Penelitian Pendukung
 
 ### 1. CBAM: Convolutional Block Attention Module
+
 - **Penulis**: Sanghyun Woo, Jongchan Park, Joon-Young Lee, In So Kweon
 - **Sumber**: arXiv:1807.06521
 - **Kontribusi**: Memperkenalkan CBAM yang meningkatkan performa model CNN tanpa overhead komputasi besar
 - **Relevansi**: Attention mechanism sangat efektif untuk klasifikasi sampah karena dapat fokus pada fitur visual yang membedakan kategori sampah
 
 ### 2. TACO: Trash Annotations in Context for Litter Detection
+
 - **Penulis**: Pedro F. Proença, Pedro Simões
 - **Sumber**: arXiv:2003.06975
 - **Kontribusi**: Dataset TACO untuk deteksi sampah dengan 1500 gambar dan 4784 anotasi
 - **Relevansi**: Menunjukkan tantangan dan pendekatan untuk klasifikasi sampah menggunakan CNN
 
 ### 3. Penelitian Terkait Klasifikasi Sampah
+
 Berdasarkan kajian literatur, CNN telah terbukti efektif untuk klasifikasi sampah karena kemampuannya mengekstrak fitur visual kompleks. CBAM meningkatkan kemampuan ini dengan memberikan attention pada fitur yang relevan.
 
 ## Kesimpulan
