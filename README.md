@@ -15,9 +15,8 @@ Integrasi CBAM memungkinkan model untuk memfokuskan "perhatian" pada fitur visua
 
 ### ✨ Fitur Utama
 *   **Arsitektur Hybrid**: ResNet-34 backbone dengan modul atensi CBAM pada setiap blok residual.
-*   **Akurasi Tinggi**: Mencapai akurasi validasi **~94.5%** dan F1-Score **0.94**.
+*   **Akurasi Tinggi**: Mencapai akurasi validasi **~92%** dan F1-Score **0.92**.
 *   **Aplikasi Interaktif**: Antarmuka pengguna berbasis web yang intuitif menggunakan **Streamlit**.
-*   **Explainable AI (XAI)**: Integrasi **Grad-CAM** untuk visualisasi area fokus model (interpretabilitas).
 *   **Reproducibility**: Pipeline pelatihan lengkap dengan logging, checkpointing, dan konfigurasi benih acak.
 
 ---
@@ -126,11 +125,9 @@ Berdasarkan eksperimen pada dataset uji:
 | Metrik | Nilai |
 | :--- | :--- |
 | **Akurasi Validasi** | **94.5%** |
-| **Precision (Avg)** | 94.5% |
-| **Recall (Avg)** | 94.4% |
-| **F1-Score** | 0.944 |
-
-*Model menunjukkan peningkatan performa sebesar **+3.3%** dibandingkan ResNet-34 standar tanpa atensi.*
+| **Precision (Avg)** | 92% |
+| **Recall (Avg)** | 92% |
+| **F1-Score** | 0.92 |
 
 ---
 
