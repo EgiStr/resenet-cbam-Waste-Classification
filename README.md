@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 📋 Ikhtisar Proyek
-<img width="1587" height="2245" alt="Poster Kel 14 DL" src="https://github.com/user-attachments/assets/54f42efa-2fcc-4e65-bc0e-9f106e67db68" />
+<img width="1587" height="2245" alt="Poster Kel 14 DL" src="https://github.com/user-attachments/assets/09491327-0828-4dd3-ae3e-db94b159bca0" />
 
 Proyek ini mengimplementasikan solusi *Deep Learning* mutakhir untuk klasifikasi sampah otomatis, membedakan antara sampah **Organik** dan **Daur Ulang**. Inti dari solusi ini adalah arsitektur **ResNet-34** yang dimodifikasi dengan **Convolutional Block Attention Module (CBAM)**.
 
